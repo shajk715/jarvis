@@ -1,16 +1,19 @@
 // 음성 인식(STT) 모듈 - Web Speech API 기반
 let recognition = null;
 let onResultCallback = null;
+let onInterimCallback = null;
 let onErrorCallback = null;
 
 /**
  * STT 초기화
  * @param {Object} options
- * @param {Function} options.onResult - 인식 결과 콜백 (text: string)
+ * @param {Function} options.onResult - 최종 인식 결과 콜백 (text: string)
+ * @param {Function} [options.onInterim] - 중간 인식 결과 콜백 (text: string) — 말하는 동안 실시간 표시용
  * @param {Function} options.onError - 에러 콜백 (error: Error)
  */
-export function initSTT({ onResult, onError }) {
+export function initSTT({ onResult, onInterim, onError }) {
   onResultCallback = onResult;
+  onInterimCallback = onInterim;
   onErrorCallback = onError;
 
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -25,14 +28,22 @@ export function initSTT({ onResult, onError }) {
   recognition.interimResults = true;
 
   recognition.onresult = (event) => {
+    let interimText = '';
     for (let i = event.resultIndex; i < event.results.length; i++) {
+      const transcript = event.results[i][0].transcript;
       if (event.results[i].isFinal) {
-        const finalText = event.results[i][0].transcript.trim();
+        const finalText = transcript.trim();
         console.log('[STT] 최종 인식 결과:', finalText);
         if (onResultCallback) {
           onResultCallback(finalText);
         }
+      } else {
+        interimText += transcript;
       }
+    }
+    // 중간 결과를 실시간으로 전달
+    if (interimText && onInterimCallback) {
+      onInterimCallback(interimText.trim());
     }
   };
 

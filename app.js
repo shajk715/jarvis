@@ -110,8 +110,16 @@ function startApp() {
   // 마이크 버튼 이벤트
   micBtn.addEventListener('click', toggleMic);
 
-  // STT 초기화
-  initSTT({ onResult: handleVoiceResult, onError: handleError });
+  // STT 초기화 (interim 결과로 실시간 자막 표시)
+  initSTT({
+    onResult: handleVoiceResult,
+    onInterim: (text) => {
+      transcript.textContent = text;
+      const guide = document.getElementById('guide-message');
+      if (guide) guide.style.display = 'none';
+    },
+    onError: handleError,
+  });
 
   // 웨이크워드 감지 초기화 및 시작
   initWakeWord({ onDetected: onWakeWordDetected });
