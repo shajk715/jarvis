@@ -60,8 +60,9 @@ export async function sendMessage(userMessage, systemPrompt) {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.error('Claude API error:', response.status, errorData);
-      return '죄송합니다 주인님, 통신에 문제가 발생했습니다.';
+      console.error('[Claude] API 에러:', response.status, errorData);
+      const errMsg = errorData.error || errorData.type || `HTTP ${response.status}`;
+      return `죄송합니다 주인님, 통신에 문제가 발생했습니다. (${errMsg})`;
     }
 
     const data = await response.json();
@@ -91,7 +92,7 @@ export async function askClaudeWithSearch(userMessage, systemPrompt) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: CONFIG.CLAUDE_MODEL,
-        max_tokens: 500,
+        max_tokens: 1024,
         system: systemPrompt || JARVIS_SYSTEM_PROMPT,
         messages: [{ role: 'user', content: userMessage }],
         tools: [
@@ -106,20 +107,33 @@ export async function askClaudeWithSearch(userMessage, systemPrompt) {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.error('Claude Search API error:', response.status, errorData);
-      return '죄송합니다 주인님, 검색 중 문제가 발생했습니다.';
+      console.error('[Claude Search] API 에러:', response.status, errorData);
+      // 웹 검색 실패 시 일반 대화로 폴백
+      console.log('[Claude Search] 일반 대화로 폴백');
+      return await sendMessage(userMessage, systemPrompt);
     }
 
     const data = await response.json();
+    console.log('[Claude Search] 응답:', data);
 
     // 응답 content 블록에서 텍스트만 추출
     const textBlocks = (data.content || []).filter((block) => block.type === 'text');
-    const resultText = textBlocks.map((block) => block.text).join('\n');
+    const resultText = textBlocks.map((block) => block.text).join('\n').trim();
 
-    return resultText || '죄송합니다 주인님, 검색 결과를 처리하지 못했습니다.';
+    if (!resultText) {
+      console.warn('[Claude Search] 텍스트 블록 없음, 일반 대화로 폴백');
+      return await sendMessage(userMessage, systemPrompt);
+    }
+
+    return resultText;
   } catch (error) {
-    console.error('Claude Search API 호출 실패:', error);
-    return '죄송합니다 주인님, 검색 통신에 문제가 발생했습니다.';
+    console.error('[Claude Search] 호출 실패:', error);
+    // 네트워크 에러 시에도 일반 대화로 폴백
+    try {
+      return await sendMessage(userMessage, systemPrompt);
+    } catch {
+      return '죄송합니다 주인님, 통신에 문제가 발생했습니다.';
+    }
   }
 }
 

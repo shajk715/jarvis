@@ -45,12 +45,18 @@ export default async function handler(req, res) {
     const data = await response.json();
 
     if (!response.ok) {
-      return res.status(response.status).json(data);
+      console.error('Claude API error:', response.status, JSON.stringify(data));
+      // 상세 에러를 클라이언트로 전달
+      return res.status(response.status).json({
+        error: data.error?.message || data.error || 'Claude API error',
+        type: data.error?.type,
+        status: response.status,
+      });
     }
 
     return res.status(200).json(data);
   } catch (error) {
     console.error('Claude API proxy error:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: error.message || 'Internal server error' });
   }
 }
