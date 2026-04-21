@@ -1,0 +1,32 @@
+{
+  "name": "JARVIS - 음성 AI 어시스턴트",
+  "short_name": "JARVIS",
+  "description": "네, 주인님. 자비스가 도와드리겠습니다.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#060611",
+  "theme_color": "#0a0a0f",
+  "lang": "ko-KR",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="orbGradient" cx="40%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#00dcff" stop-opacity="1"/>
+      <stop offset="45%" stop-color="#00b4d8" stop-opacity="0.85"/>
+      <stop offset="100%" stop-color="#0077b6" stop-opacity="0.3"/>
+    </radialGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#00b4d8" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#00b4d8" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="blur">
+      <feGaussianBlur stdDeviation="8"/>
+    </filter>
+  </defs>
+
+  <!-- 배경 -->
+  <rect width="512" height="512" fill="#060611" rx="80"/>
+
+  <!-- 외곽 링 파동 -->
+  <circle cx="256" cy="256" r="220" fill="none" stroke="#00b4d8" stroke-width="1.5" opacity="0.2"/>
+  <circle cx="256" cy="256" r="180" fill="none" stroke="#00b4d8" stroke-width="1.5" opacity="0.35"/>
+  <circle cx="256" cy="256" r="140" fill="none" stroke="#00b4d8" stroke-width="2" opacity="0.5"/>
+
+  <!-- 글로우 -->
+  <circle cx="256" cy="256" r="130" fill="url(#glow)" filter="url(#blur)"/>
+
+  <!-- 메인 오브 -->
+  <circle cx="256" cy="256" r="90" fill="url(#orbGradient)"/>
+
+  <!-- 하이라이트 -->
+  <ellipse cx="230" cy="225" rx="28" ry="22" fill="#ffffff" opacity="0.4"/>
+</svg>
