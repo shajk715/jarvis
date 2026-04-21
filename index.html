@@ -6,9 +6,25 @@
   <meta name="theme-color" content="#0a0a0f">
   <title>JARVIS - 음성 AI 어시스턴트</title>
   <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-  <div id="app">
+  <!-- 로그인 화면 -->
+  <div id="auth-screen">
+    <div class="auth-container">
+      <h1 class="auth-title">J.A.R.V.I.S</h1>
+      <p class="auth-subtitle">음성 AI 어시스턴트</p>
+      <form id="auth-form">
+        <input type="email" id="auth-email" placeholder="이메일" required>
+        <input type="password" id="auth-password" placeholder="비밀번호" required>
+        <button type="submit" id="auth-submit">로그인</button>
+      </form>
+      <p class="auth-toggle">계정이 없으신가요? <a href="#" id="toggle-auth">회원가입</a></p>
+      <p id="auth-error" class="auth-error"></p>
+    </div>
+  </div>
+
+  <div id="app" style="display:none">
     <!-- 배경 그리드 -->
     <div id="bg-grid"></div>
 

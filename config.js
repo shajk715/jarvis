@@ -1,8 +1,8 @@
-// JARVIS 설정 예시 - config.js로 복사 후 Supabase 정보를 입력하세요
+// JARVIS 설정
 const CONFIG = {
   // Supabase
-  SUPABASE_URL: 'https://your-project.supabase.co',
-  SUPABASE_ANON_KEY: 'your-anon-key',
+  SUPABASE_URL: 'https://qtisdsgrrsvewiikjxzp.supabase.co',
+  SUPABASE_ANON_KEY: 'sb_publishable_zHP6m4Kz6ipcBNp2b9DWpg_b9vLKS4r',
 
   // Claude (API 키는 Vercel 서버사이드에서 관리)
   CLAUDE_MODEL: 'claude-sonnet-4-20250514',

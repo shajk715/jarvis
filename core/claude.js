@@ -1,8 +1,8 @@
-// Claude API 연동 모듈
+// Claude API 연동 모듈 (Vercel 서버사이드 프록시 경유)
 import CONFIG from '../config.js';
 import { storage } from '../utils/storage.js';
 
-const API_URL = 'https://api.anthropic.com/v1/messages';
+const API_URL = '/api/claude';
 const CONVERSATION_KEY = 'conversation';
 const MAX_HISTORY = 10;
 
@@ -49,12 +49,7 @@ export async function sendMessage(userMessage, systemPrompt) {
 
     const response = await fetch(API_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': CONFIG.CLAUDE_API_KEY,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: CONFIG.CLAUDE_MODEL,
         max_tokens: 300,
@@ -93,12 +88,7 @@ export async function askClaudeWithSearch(userMessage, systemPrompt) {
   try {
     const response = await fetch(API_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': CONFIG.CLAUDE_API_KEY,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: CONFIG.CLAUDE_MODEL,
         max_tokens: 500,

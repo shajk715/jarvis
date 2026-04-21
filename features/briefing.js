@@ -11,7 +11,7 @@ import { askClaudeWithSearch } from '../core/claude.js';
  */
 export async function handleBriefing(intent, rawText) {
   try {
-    const data = collectBriefingData();
+    const data = await collectBriefingData();
 
     const dateStr = data.date.toLocaleDateString('ko-KR', {
       year: 'numeric',
@@ -41,13 +41,17 @@ export async function handleBriefing(intent, rawText) {
 
 /**
  * 브리핑 데이터 수집
- * @returns {Object} { schedules, memos, date }
+ * @returns {Promise<Object>} { schedules, memos, date }
  */
-export function collectBriefingData() {
+export async function collectBriefingData() {
   const today = new Date();
+  const [schedules, memos] = await Promise.all([
+    getSchedules(today),
+    getMemos(),
+  ]);
   return {
-    schedules: getSchedules(today),
-    memos: getMemos(),
+    schedules,
+    memos,
     date: today,
   };
 }

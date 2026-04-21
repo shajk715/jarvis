@@ -1,11 +1,11 @@
 // JARVIS 앱 진입점 - 모듈 통합 및 초기화
 import CONFIG from './config.js';
+import { getCurrentUser, signIn, signUp, onAuthStateChange } from './auth.js';
 import { initWakeWord, startWakeWordDetection, stopWakeWordDetection } from './core/wakeWord.js';
 import { initSTT, startListening, stopListening } from './core/stt.js';
 import { speak } from './core/tts.js';
 import { sendMessage, askClaudeWithSearch } from './core/claude.js';
 import { parseIntent } from './utils/intentParser.js';
-import { storage } from './utils/storage.js';
 import { handleSchedule } from './features/schedule.js';
 import { handleMemo } from './features/memo.js';
 import { handleTimer } from './features/timer.js';
@@ -31,11 +31,81 @@ async function init() {
   updateClock();
   setInterval(updateClock, 1000);
 
-  // API 키 확인
-  if (CONFIG.CLAUDE_API_KEY === '여기에_클로드_API_키_입력') {
-    responseText.textContent = 'config.js에 API 키를 설정해주세요.';
+  // 인증 체크
+  const user = await getCurrentUser();
+  if (!user) {
+    showAuthScreen();
+    setupAuthForm();
     return;
   }
+
+  // 인증됨 - 앱 시작
+  startApp();
+}
+
+/**
+ * 인증 화면 표시
+ */
+function showAuthScreen() {
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+}
+
+/**
+ * 앱 화면 표시
+ */
+function showApp() {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+}
+
+/**
+ * 인증 폼 설정
+ */
+function setupAuthForm() {
+  let isSignUp = false;
+  const form = document.getElementById('auth-form');
+  const toggleBtn = document.getElementById('toggle-auth');
+  const submitBtn = document.getElementById('auth-submit');
+  const errorEl = document.getElementById('auth-error');
+
+  toggleBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    isSignUp = !isSignUp;
+    submitBtn.textContent = isSignUp ? '회원가입' : '로그인';
+    toggleBtn.textContent = isSignUp ? '로그인' : '회원가입';
+    toggleBtn.parentElement.childNodes[0].textContent = isSignUp ? '이미 계정이 있으신가요? ' : '계정이 없으신가요? ';
+    errorEl.textContent = '';
+  });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('auth-email').value;
+    const password = document.getElementById('auth-password').value;
+    errorEl.textContent = '';
+
+    try {
+      if (isSignUp) {
+        await signUp(email, password);
+        errorEl.style.color = '#00e676';
+        errorEl.textContent = '가입 완료! 이메일을 확인해주세요.';
+      } else {
+        await signIn(email, password);
+        showApp();
+        startApp();
+      }
+    } catch (err) {
+      errorEl.style.color = '#ff4444';
+      errorEl.textContent = err.message;
+    }
+  });
+}
+
+/**
+ * 앱 시작 (인증 완료 후)
+ */
+function startApp() {
+  showApp();
 
   // 마이크 버튼 이벤트
   micBtn.addEventListener('click', toggleMic);

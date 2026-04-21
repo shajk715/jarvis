@@ -1,7 +1,7 @@
-// 메모 모듈 - localStorage 기반 메모 CRUD
-import { storage } from '../utils/storage.js';
+// 메모 모듈 - Supabase 기반 메모 CRUD
+import { supabaseClient } from '../lib/supabase.js';
 
-const MEMO_KEY = 'memos';
+const TABLE = 'memos';
 
 /**
  * 메모 관련 명령 처리
@@ -17,12 +17,12 @@ export async function handleMemo(intent, rawText) {
     const content = rawText
       .replace(/메모해?\s*(줘|줘라|해|해줘)?|기록해?\s*(줘|해)?|적어\s*(줘|놔)?/g, '')
       .trim() || rawText;
-    addMemo(content);
+    await addMemo(content);
     return '메모했습니다, 주인님.';
   }
 
   if (subAction === 'list') {
-    const memos = getMemos();
+    const memos = await getMemos();
     if (memos.length === 0) {
       return '저장된 메모가 없습니다, 주인님.';
     }
@@ -32,19 +32,19 @@ export async function handleMemo(intent, rawText) {
   }
 
   if (subAction === 'delete') {
-    const memos = getMemos();
+    const memos = await getMemos();
     if (memos.length === 0) {
       return '삭제할 메모가 없습니다, 주인님.';
     }
     const last = memos[memos.length - 1];
-    removeMemo(last.id);
+    await removeMemo(last.id);
     return `마지막 메모를 삭제했습니다, 주인님.`;
   }
 
   // subAction이 null이면 rawText를 그냥 메모로 저장
   const content = rawText.trim();
   if (content) {
-    addMemo(content);
+    await addMemo(content);
     return '메모했습니다, 주인님.';
   }
   return '메모할 내용을 말씀해주세요, 주인님.';
@@ -54,48 +54,57 @@ export async function handleMemo(intent, rawText) {
  * 메모 추가
  * @param {string} content - 메모 내용
  * @param {string} [tag] - 태그 (선택)
- * @returns {Object} 생성된 메모 객체
+ * @returns {Promise<Object>} 생성된 메모 객체
  */
-export function addMemo(content, tag) {
-  const memos = storage.get(MEMO_KEY, []);
-  const memo = {
-    id: Date.now(),
-    content,
-    tag: tag || null,
-    createdAt: new Date().toISOString(),
-  };
-  memos.push(memo);
-  storage.set(MEMO_KEY, memos);
-  return memo;
+export async function addMemo(content, tag) {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  const { data, error } = await supabaseClient
+    .from(TABLE)
+    .insert({ user_id: user.id, content, tag: tag || null })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
 }
 
 /**
  * 모든 메모 조회
- * @returns {Array} 메모 목록
+ * @returns {Promise<Array>} 메모 목록
  */
-export function getMemos() {
-  return storage.get(MEMO_KEY, []);
+export async function getMemos() {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  const { data, error } = await supabaseClient
+    .from(TABLE)
+    .select('*')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+  return data || [];
 }
 
 /**
  * 메모 검색
  * @param {string} keyword - 검색어
- * @returns {Array} 검색 결과
+ * @returns {Promise<Array>} 검색 결과
  */
-export function searchMemos(keyword) {
-  const memos = getMemos();
-  return memos.filter(m => m.content.includes(keyword));
+export async function searchMemos(keyword) {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  const { data, error } = await supabaseClient
+    .from(TABLE)
+    .select('*')
+    .eq('user_id', user.id)
+    .ilike('content', `%${keyword}%`)
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+  return data || [];
 }
 
 /**
  * 메모 삭제
- * @param {string} id - 메모 ID
- * @returns {boolean} 삭제 성공 여부
+ * @param {number} id - 메모 ID
+ * @returns {Promise<boolean>} 삭제 성공 여부
  */
-export function removeMemo(id) {
-  const memos = getMemos();
-  const filtered = memos.filter(m => m.id !== id);
-  if (filtered.length === memos.length) return false;
-  storage.set(MEMO_KEY, filtered);
-  return true;
+export async function removeMemo(id) {
+  const { error } = await supabaseClient.from(TABLE).delete().eq('id', id);
+  return !error;
 }

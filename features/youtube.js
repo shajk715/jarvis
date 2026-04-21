@@ -1,5 +1,4 @@
-// 유튜브 음악 재생 모듈 - YouTube Data API v3
-import CONFIG from '../config.js';
+// 유튜브 음악 재생 모듈 - Vercel 서버사이드 프록시 경유
 
 // 현재 재생 상태 관리
 let currentVideoId = null;
@@ -52,14 +51,11 @@ export async function handleYoutube(intent, rawText) {
  */
 export async function searchYoutube(query, maxResults = 5) {
   const params = new URLSearchParams({
-    part: 'snippet',
-    type: 'video',
     q: query,
-    key: CONFIG.YOUTUBE_API_KEY,
     maxResults: maxResults.toString(),
   });
 
-  const response = await fetch(`https://www.googleapis.com/youtube/v3/search?${params}`);
+  const response = await fetch(`/api/youtube?${params}`);
 
   if (!response.ok) {
     throw new Error(`YouTube API error: ${response.status}`);
