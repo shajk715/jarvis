@@ -22,7 +22,7 @@ export default async function handler(req, res) {
     const { model, max_tokens, system, messages, tools } = req.body;
 
     const body = {
-      model: model || 'claude-sonnet-4-20250514',
+      model: model || 'claude-sonnet-4-5',
       max_tokens: max_tokens || 300,
       system,
       messages,

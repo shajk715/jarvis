@@ -5,7 +5,7 @@ const CONFIG = {
   SUPABASE_ANON_KEY: 'sb_publishable_zHP6m4Kz6ipcBNp2b9DWpg_b9vLKS4r',
 
   // Claude (API 키는 Vercel 서버사이드에서 관리)
-  CLAUDE_MODEL: 'claude-sonnet-4-20250514',
+  CLAUDE_MODEL: 'claude-sonnet-4-5',
 
   // TTS 설정
   TTS_LANG: 'ko-KR',
