@@ -73,39 +73,43 @@ export function consumePendingVideoId() {
 
 /**
  * 디바이스에 맞춰 YouTube 앱(설치 시) 또는 웹페이지를 연다.
- * - Android: intent URL → YouTube 앱이 강제로 잡음, 미설치 시 웹으로 폴백
- * - iOS: youtube:// 스킴 → 앱이 잡음, 미설치 시 0.8초 후 웹으로 폴백
- * - Desktop/기타: 새 탭에서 웹페이지 열기
+ * PWA 표준 동작: anchor 클릭이 location.href 보다 더 안정적으로 외부 핸들러를 트리거
+ * - Android: intent URL → YouTube 앱 강제 호출, 미설치 시 브라우저 폴백
+ * - iOS: youtube:// 스킴 → 앱 호출, 미설치 시 1.2초 후 웹으로 폴백
+ * - Desktop/기타: 새 탭에서 웹페이지
  */
 export function openYoutubeApp(videoId) {
   const ua = navigator.userAgent || '';
   const webUrl = `https://www.youtube.com/watch?v=${videoId}`;
 
+  const triggerLink = (href, target) => {
+    const a = document.createElement('a');
+    a.href = href;
+    if (target) a.target = target;
+    a.rel = 'noopener noreferrer';
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  };
+
   if (/Android/i.test(ua)) {
     const fallback = encodeURIComponent(webUrl);
     const intentUrl = `intent://www.youtube.com/watch?v=${videoId}#Intent;package=com.google.android.youtube;scheme=https;S.browser_fallback_url=${fallback};end`;
-    window.location.href = intentUrl;
+    triggerLink(intentUrl);
     return;
   }
 
   if (/iPhone|iPad|iPod/i.test(ua)) {
-    // iOS: 앱 스킴으로 시도, 앱이 잡으면 즉시 백그라운드로 전환됨
-    window.location.href = `youtube://www.youtube.com/watch?v=${videoId}`;
-    // 미설치 시 페이지가 살아있으므로 웹으로 폴백
+    triggerLink(`youtube://www.youtube.com/watch?v=${videoId}`);
     setTimeout(() => {
       if (!document.hidden) {
-        window.location.href = webUrl;
+        triggerLink(webUrl, '_blank');
       }
-    }, 800);
+    }, 1200);
     return;
   }
 
-  // 데스크톱/기타: 새 탭으로 열기
-  const a = document.createElement('a');
-  a.href = webUrl;
-  a.target = '_blank';
-  a.rel = 'noopener';
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
+  // 데스크톱/기타
+  triggerLink(webUrl, '_blank');
 }

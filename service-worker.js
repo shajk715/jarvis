@@ -1,5 +1,5 @@
 // JARVIS Service Worker - 오프라인 캐싱
-const CACHE_VERSION = 'jarvis-v3';
+const CACHE_VERSION = 'jarvis-v4';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -53,34 +53,39 @@ self.addEventListener('activate', (event) => {
 // 요청 처리
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
+  const isSameOrigin = url.origin === self.location.origin;
 
-  // API 요청 (Gemini/YouTube/Supabase)은 항상 네트워크 우선
-  if (
-    url.pathname.startsWith('/api/') ||
-    url.hostname.includes('supabase.co') ||
-    url.hostname.includes('googleapis.com') ||
-    url.hostname.includes('youtube.com')
-  ) {
+  // 외부 오리진(youtube.com 등)으로의 네비게이션은 SW가 절대 가로채면 안 됨
+  // → 모바일 PWA에서 OS가 외부 앱(YouTube)으로 핸드오프하도록 양보
+  if (!isSameOrigin && event.request.mode === 'navigate') {
+    return;
+  }
+
+  // 외부 오리진 fetch(XHR)은 그대로 네트워크
+  if (!isSameOrigin) {
     event.respondWith(fetch(event.request));
     return;
   }
 
-  // 정적 자산은 캐시 우선, 없으면 네트워크
+  // 같은 오리진의 /api/* 도 항상 네트워크
+  if (url.pathname.startsWith('/api/')) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  // 정적 자산은 캐시 우선
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) return cached;
-
       return fetch(event.request)
         .then((response) => {
-          // 동일 출처 자산만 추가 캐싱
-          if (response.ok && url.origin === self.location.origin) {
+          if (response.ok) {
             const clone = response.clone();
             caches.open(CACHE_VERSION).then((cache) => cache.put(event.request, clone));
           }
           return response;
         })
         .catch(() => {
-          // 오프라인이고 네비게이션 요청이면 index.html로 폴백
           if (event.request.mode === 'navigate') {
             return caches.match('/index.html');
           }
