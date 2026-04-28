@@ -1,7 +1,7 @@
 // 유튜브 음악 검색 모듈 - Vercel 서버사이드 프록시 경유
-// 검색만 서버에서 하고, 재생은 youtube.com 으로 직접 이동
+// 검색만 서버에서 하고, 재생은 OS별 딥링크로 YouTube 앱/웹을 직접 호출
 
-let pendingNavigation = null;
+let pendingVideoId = null;
 
 /**
  * 유튜브 관련 명령 처리
@@ -31,7 +31,7 @@ export async function handleYoutube(intent, rawText) {
     }
 
     const video = results[0];
-    pendingNavigation = `https://www.youtube.com/watch?v=${video.id}`;
+    pendingVideoId = video.id;
     return `${video.title}을 재생합니다, 주인님.`;
   } catch (error) {
     console.error('[YouTube] 검색 실패:', error);
@@ -63,11 +63,49 @@ export async function searchYoutube(query, maxResults = 5) {
 }
 
 /**
- * 마지막 검색 결과의 유튜브 URL을 가져오고 큐를 비움
- * (TTS 응답 후 페이지 이동에 사용)
+ * 마지막 검색 결과의 videoId를 가져오고 큐를 비움
  */
-export function consumePendingNavigation() {
-  const url = pendingNavigation;
-  pendingNavigation = null;
-  return url;
+export function consumePendingVideoId() {
+  const id = pendingVideoId;
+  pendingVideoId = null;
+  return id;
+}
+
+/**
+ * 디바이스에 맞춰 YouTube 앱(설치 시) 또는 웹페이지를 연다.
+ * - Android: intent URL → YouTube 앱이 강제로 잡음, 미설치 시 웹으로 폴백
+ * - iOS: youtube:// 스킴 → 앱이 잡음, 미설치 시 0.8초 후 웹으로 폴백
+ * - Desktop/기타: 새 탭에서 웹페이지 열기
+ */
+export function openYoutubeApp(videoId) {
+  const ua = navigator.userAgent || '';
+  const webUrl = `https://www.youtube.com/watch?v=${videoId}`;
+
+  if (/Android/i.test(ua)) {
+    const fallback = encodeURIComponent(webUrl);
+    const intentUrl = `intent://www.youtube.com/watch?v=${videoId}#Intent;package=com.google.android.youtube;scheme=https;S.browser_fallback_url=${fallback};end`;
+    window.location.href = intentUrl;
+    return;
+  }
+
+  if (/iPhone|iPad|iPod/i.test(ua)) {
+    // iOS: 앱 스킴으로 시도, 앱이 잡으면 즉시 백그라운드로 전환됨
+    window.location.href = `youtube://www.youtube.com/watch?v=${videoId}`;
+    // 미설치 시 페이지가 살아있으므로 웹으로 폴백
+    setTimeout(() => {
+      if (!document.hidden) {
+        window.location.href = webUrl;
+      }
+    }, 800);
+    return;
+  }
+
+  // 데스크톱/기타: 새 탭으로 열기
+  const a = document.createElement('a');
+  a.href = webUrl;
+  a.target = '_blank';
+  a.rel = 'noopener';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
 }

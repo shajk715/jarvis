@@ -10,7 +10,7 @@ import { handleSchedule } from './features/schedule.js';
 import { handleMemo } from './features/memo.js';
 import { handleTimer } from './features/timer.js';
 import { handleBriefing } from './features/briefing.js';
-import { handleYoutube, consumePendingNavigation } from './features/youtube.js';
+import { handleYoutube, consumePendingVideoId, openYoutubeApp } from './features/youtube.js';
 // import { handleMaps } from './features/maps.js'; // 보류
 
 // DOM 요소
@@ -217,10 +217,10 @@ async function handleVoiceResult(text) {
     orb.className = 'speaking';
     await speak(result);
 
-    // 유튜브 검색 결과가 있으면 TTS 직후 유튜브 페이지로 이동
-    const youtubeUrl = consumePendingNavigation();
-    if (youtubeUrl) {
-      window.location.href = youtubeUrl;
+    // 유튜브 검색 결과가 있으면 TTS 직후 YouTube 앱(또는 웹)으로 이동
+    const videoId = consumePendingVideoId();
+    if (videoId) {
+      openYoutubeApp(videoId);
       return;
     }
   } catch (err) {
