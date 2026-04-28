@@ -4,8 +4,8 @@ const CONFIG = {
   SUPABASE_URL: 'https://qtisdsgrrsvewiikjxzp.supabase.co',
   SUPABASE_ANON_KEY: 'sb_publishable_zHP6m4Kz6ipcBNp2b9DWpg_b9vLKS4r',
 
-  // Claude (API 키는 Vercel 서버사이드에서 관리)
-  CLAUDE_MODEL: 'claude-sonnet-4-5',
+  // Gemini (API 키는 Vercel 서버사이드에서 관리)
+  GEMINI_MODEL: 'gemini-2.0-flash',
 
   // TTS 설정
   TTS_LANG: 'ko-KR',

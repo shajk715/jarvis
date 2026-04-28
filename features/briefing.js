@@ -1,7 +1,7 @@
 // 하루 브리핑 모듈 - 일정/메모/날씨 종합 요약
 import { getSchedules } from './schedule.js';
 import { getMemos } from './memo.js';
-import { askClaudeWithSearch } from '../core/claude.js';
+import { askWithSearch } from '../core/gemini.js';
 
 /**
  * 브리핑 관련 명령 처리
@@ -31,7 +31,7 @@ export async function handleBriefing(intent, rawText) {
 
     const prompt = `오늘은 ${dateStr}입니다. 오늘 일정: ${scheduleList}. 최근 메모: ${memoList}. 현재 한국의 날씨와 주요 뉴스를 포함하여 간단한 아침 브리핑을 해주세요.`;
 
-    const response = await askClaudeWithSearch(prompt);
+    const response = await askWithSearch(prompt);
     return response;
   } catch (error) {
     console.error('[Briefing] 브리핑 생성 실패:', error);

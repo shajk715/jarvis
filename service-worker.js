@@ -1,5 +1,5 @@
 // JARVIS Service Worker - 오프라인 캐싱
-const CACHE_VERSION = 'jarvis-v1';
+const CACHE_VERSION = 'jarvis-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -11,7 +11,7 @@ const STATIC_ASSETS = [
   '/core/wakeWord.js',
   '/core/stt.js',
   '/core/tts.js',
-  '/core/claude.js',
+  '/core/gemini.js',
   '/features/schedule.js',
   '/features/memo.js',
   '/features/timer.js',
@@ -54,11 +54,10 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // API 요청 (Claude/YouTube/Supabase)은 항상 네트워크 우선
+  // API 요청 (Gemini/YouTube/Supabase)은 항상 네트워크 우선
   if (
     url.pathname.startsWith('/api/') ||
     url.hostname.includes('supabase.co') ||
-    url.hostname.includes('anthropic.com') ||
     url.hostname.includes('googleapis.com') ||
     url.hostname.includes('youtube.com')
   ) {

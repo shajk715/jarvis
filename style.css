@@ -486,18 +486,6 @@ html, body {
   50% { transform: scale(1.1); opacity: 0.6; }
 }
 
-/* === YouTube 플레이어 === */
-#youtube-player {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  opacity: 0;
-  pointer-events: none;
-}
-
 /* === 반응형 / 가로 모드 === */
 @media (orientation: landscape) and (max-height: 500px) {
   #main-area {

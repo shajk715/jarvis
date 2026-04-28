@@ -1,7 +1,7 @@
-// 유튜브 음악 재생 모듈 - Vercel 서버사이드 프록시 경유
+// 유튜브 음악 검색 모듈 - Vercel 서버사이드 프록시 경유
+// 검색만 서버에서 하고, 재생은 youtube.com 으로 직접 이동
 
-// 현재 재생 상태 관리
-let currentVideoId = null;
+let pendingNavigation = null;
 
 /**
  * 유튜브 관련 명령 처리
@@ -12,18 +12,14 @@ let currentVideoId = null;
 export async function handleYoutube(intent, rawText) {
   const subAction = intent.subAction;
 
-  if (subAction === 'stop') {
-    stopVideo();
-    return '음악을 멈추겠습니다, 주인님.';
+  if (subAction === 'stop' || subAction === 'pause') {
+    // 외부 유튜브 페이지/앱은 우리가 제어할 수 없음
+    return '유튜브 앱에서 직접 멈춰주세요, 주인님.';
   }
 
-  if (subAction === 'pause') {
-    pauseVideo();
-    return '일시정지했습니다, 주인님.';
-  }
-
-  // 기본: 검색 후 재생
-  const query = intent.params?.query || rawText.replace(/틀어\s*(줘|줘라)?|재생해?\s*(줘)?|들려\s*(줘)?/g, '').trim();
+  const query =
+    intent.params?.query ||
+    rawText.replace(/틀어\s*(줘|줘라)?|재생해?\s*(줘)?|들려\s*(줘)?/g, '').trim();
   if (!query) {
     return '무엇을 재생할까요, 주인님?';
   }
@@ -35,7 +31,7 @@ export async function handleYoutube(intent, rawText) {
     }
 
     const video = results[0];
-    playVideo(video.id);
+    pendingNavigation = `https://www.youtube.com/watch?v=${video.id}`;
     return `${video.title}을 재생합니다, 주인님.`;
   } catch (error) {
     console.error('[YouTube] 검색 실패:', error);
@@ -45,9 +41,6 @@ export async function handleYoutube(intent, rawText) {
 
 /**
  * 유튜브 검색
- * @param {string} query - 검색어
- * @param {number} [maxResults=5] - 최대 결과 수
- * @returns {Promise<Array>} 검색 결과 목록
  */
 export async function searchYoutube(query, maxResults = 5) {
   const params = new URLSearchParams({
@@ -56,13 +49,12 @@ export async function searchYoutube(query, maxResults = 5) {
   });
 
   const response = await fetch(`/api/youtube?${params}`);
-
   if (!response.ok) {
     throw new Error(`YouTube API error: ${response.status}`);
   }
 
   const data = await response.json();
-  return (data.items || []).map(item => ({
+  return (data.items || []).map((item) => ({
     id: item.id.videoId,
     title: item.snippet.title,
     channel: item.snippet.channelTitle,
@@ -71,58 +63,11 @@ export async function searchYoutube(query, maxResults = 5) {
 }
 
 /**
- * 유튜브 영상 재생 (임베드 iframe)
- * @param {string} videoId - 영상 ID
+ * 마지막 검색 결과의 유튜브 URL을 가져오고 큐를 비움
+ * (TTS 응답 후 페이지 이동에 사용)
  */
-export function playVideo(videoId) {
-  currentVideoId = videoId;
-  let playerDiv = document.getElementById('youtube-player');
-
-  if (!playerDiv) {
-    playerDiv = document.createElement('div');
-    playerDiv.id = 'youtube-player';
-    document.body.appendChild(playerDiv);
-  }
-
-  playerDiv.hidden = false;
-  playerDiv.innerHTML = `<iframe
-    width="100%"
-    height="250"
-    src="https://www.youtube.com/embed/${videoId}?autoplay=1"
-    frameborder="0"
-    allow="autoplay; encrypted-media"
-    allowfullscreen
-    style="border-radius: 12px;"
-  ></iframe>`;
-}
-
-/**
- * 재생 중지 - iframe 제거
- */
-function stopVideo() {
-  const playerDiv = document.getElementById('youtube-player');
-  if (playerDiv) {
-    playerDiv.innerHTML = '';
-    playerDiv.hidden = true;
-  }
-  currentVideoId = null;
-}
-
-/**
- * 일시정지 (iframe 교체로 구현)
- */
-function pauseVideo() {
-  const playerDiv = document.getElementById('youtube-player');
-  if (playerDiv && currentVideoId) {
-    // autoplay 없이 현재 위치에서 멈춤
-    playerDiv.innerHTML = `<iframe
-      width="100%"
-      height="250"
-      src="https://www.youtube.com/embed/${currentVideoId}"
-      frameborder="0"
-      allow="encrypted-media"
-      allowfullscreen
-      style="border-radius: 12px;"
-    ></iframe>`;
-  }
+export function consumePendingNavigation() {
+  const url = pendingNavigation;
+  pendingNavigation = null;
+  return url;
 }

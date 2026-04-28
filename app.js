@@ -4,13 +4,13 @@ import { getCurrentUser, signIn, signUp, onAuthStateChange } from './auth.js';
 import { initWakeWord, startWakeWordDetection, stopWakeWordDetection } from './core/wakeWord.js';
 import { initSTT, startListening, stopListening } from './core/stt.js';
 import { speak } from './core/tts.js';
-import { sendMessage, askClaudeWithSearch } from './core/claude.js';
+import { sendMessage, askWithSearch } from './core/gemini.js';
 import { parseIntent } from './utils/intentParser.js';
 import { handleSchedule } from './features/schedule.js';
 import { handleMemo } from './features/memo.js';
 import { handleTimer } from './features/timer.js';
 import { handleBriefing } from './features/briefing.js';
-import { handleYoutube } from './features/youtube.js';
+import { handleYoutube, consumePendingNavigation } from './features/youtube.js';
 // import { handleMaps } from './features/maps.js'; // 보류
 
 // DOM 요소
@@ -200,13 +200,13 @@ async function handleVoiceResult(text) {
       //   break;
       case 'weather':
       case 'news':
-        result = await askClaudeWithSearch(text);
+        result = await askWithSearch(text);
         break;
       case 'translate':
         result = await sendMessage(text);
         break;
       default:
-        // 일반 대화 - Claude에게 전달
+        // 일반 대화 - Gemini에게 전달
         result = await sendMessage(text);
         break;
     }
@@ -216,6 +216,13 @@ async function handleVoiceResult(text) {
     setStatus('응답 중...');
     orb.className = 'speaking';
     await speak(result);
+
+    // 유튜브 검색 결과가 있으면 TTS 직후 유튜브 페이지로 이동
+    const youtubeUrl = consumePendingNavigation();
+    if (youtubeUrl) {
+      window.location.href = youtubeUrl;
+      return;
+    }
   } catch (err) {
     handleError(err);
   }
