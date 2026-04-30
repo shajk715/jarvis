@@ -737,3 +737,36 @@ html, body {
   display: block;
   border: 0;
 }
+
+/* =====================
+   외부 페이지 열기 버튼
+   (iOS PWA에서 자동 redirect 안 될 때 폴백)
+   ===================== */
+#external-open-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 28px;
+  margin-top: 8px;
+  background: rgba(0, 180, 216, 0.12);
+  border: 1.5px solid rgba(0, 180, 216, 0.5);
+  border-radius: 24px;
+  color: var(--text-primary);
+  font-family: var(--font-main);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.4px;
+  cursor: pointer;
+  box-shadow: 0 0 16px rgba(0, 180, 216, 0.22);
+  transition: background 0.25s ease, box-shadow 0.25s ease, transform 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#external-open-btn:hover {
+  background: rgba(0, 180, 216, 0.22);
+  box-shadow: 0 0 22px rgba(0, 180, 216, 0.35);
+}
+
+#external-open-btn:active {
+  transform: scale(0.97);
+}

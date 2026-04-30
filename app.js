@@ -23,6 +23,14 @@ const transcript = document.getElementById('transcript');
 const responseText = document.getElementById('response-text');
 const micBtn = document.getElementById('mic-btn');
 const timeDisplay = document.getElementById('time-display');
+const externalOpenBtn = document.getElementById('external-open-btn');
+
+// 환경 감지: iOS standalone PWA는 사용자 제스처 없이 외부 링크 자동 열기 불가
+const isIosStandalonePwa = (
+  /iPhone|iPad|iPod/i.test(navigator.userAgent) &&
+  (window.navigator.standalone === true ||
+    window.matchMedia('(display-mode: standalone)').matches)
+);
 
 // 앱 상태
 let isListening = false;
@@ -113,6 +121,14 @@ function startApp() {
   // 마이크 버튼 이벤트
   micBtn.addEventListener('click', toggleMic);
 
+  // 외부 페이지 열기 버튼 — 사용자 탭 → 같은 click 컨텍스트에서 열기
+  externalOpenBtn.addEventListener('click', () => {
+    const url = externalOpenBtn.dataset.url;
+    if (url) openExternal(url);
+    externalOpenBtn.hidden = true;
+    delete externalOpenBtn.dataset.url;
+  });
+
   // STT 초기화 (interim 결과로 실시간 자막 표시)
   initSTT({
     onResult: handleVoiceResult,
@@ -173,6 +189,10 @@ async function handleVoiceResult(text) {
   isListening = false;
   micBtn.classList.remove('active');
 
+  // 이전 명령에서 떠있을 수 있는 외부 열기 버튼 숨김
+  externalOpenBtn.hidden = true;
+  delete externalOpenBtn.dataset.url;
+
   transcript.textContent = text;
   const guide = document.getElementById('guide-message');
   if (guide) guide.style.display = 'none';
@@ -231,10 +251,16 @@ async function handleVoiceResult(text) {
       playInPlayer(videoId);
     }
 
-    // 외부 페이지 열기가 큐에 있으면 TTS 직후 새 탭/시스템 브라우저로 이동
+    // 외부 페이지 열기가 큐에 있으면 처리
+    // - iOS PWA(standalone)는 자동 열기 차단되므로 탭 버튼 노출
+    // - 그 외(Android/desktop)는 자동 열기 시도 + 버튼도 같이 띄워서 폴백
     const externalUrl = consumePendingExternal();
     if (externalUrl) {
-      openExternal(externalUrl);
+      externalOpenBtn.dataset.url = externalUrl;
+      externalOpenBtn.hidden = false;
+      if (!isIosStandalonePwa) {
+        openExternal(externalUrl);
+      }
     }
   } catch (err) {
     handleError(err);
