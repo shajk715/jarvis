@@ -12,7 +12,7 @@ const CONFIG = {
   TTS_RATE: 1.0,
 
   // 웨이크워드
-  WAKE_WORD: '자비스',
+  WAKE_WORD: '루미',
 };
 
 export default CONFIG;

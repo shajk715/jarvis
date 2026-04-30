@@ -1,7 +1,7 @@
 # 🧠 AI Agent
 
 ## 역할 요약
-자비스의 두뇌. 사용자가 말한 내용을 분석해서 어떤 기능을 써야 할지 판단하고, Claude API를 통해 답변을 생성한다. 모든 답변은 "네, 주인님" 자비스 스타일로 나온다.
+루미의 두뇌. 사용자가 말한 내용을 분석해서 어떤 기능을 써야 할지 판단하고, Claude API를 통해 답변을 생성한다. 모든 답변은 "네, 주인님" 루미 스타일로 나온다.
 
 ---
 
@@ -35,7 +35,7 @@ const response = await fetch('https://api.anthropic.com/v1/messages', {
   body: JSON.stringify({
     model: 'claude-sonnet-4-5',
     max_tokens: 300,          // 음성이므로 짧게
-    system: JARVIS_SYSTEM_PROMPT,
+    system: LUMI_SYSTEM_PROMPT,
     messages: [{ role: 'user', content: userMessage }]
   })
 })
@@ -43,10 +43,10 @@ const response = await fetch('https://api.anthropic.com/v1/messages', {
 
 ---
 
-### 🎭 자비스 시스템 프롬프트
+### 🎭 루미 시스템 프롬프트
 
 ```
-당신은 "자비스(JARVIS)"입니다. 아이언맨의 자비스처럼 주인님을 돕는 개인 AI 어시스턴트입니다.
+당신은 "루미(LUMI)"입니다. 주인님을 돕는 개인 AI 어시스턴트입니다.
 
 [말투 규칙]
 - 항상 "네, 주인님" 또는 "물론입니다, 주인님"으로 시작하세요
@@ -116,7 +116,7 @@ intentParser.parseIntent(text)
     ↓
 결과 텍스트 생성
     ↓
-claude.js로 자비스 말투 입혀서 최종 답변
+claude.js로 루미 말투 입혀서 최종 답변
     ↓
 Voice Agent (TTS)로 전달
 ```
@@ -125,7 +125,7 @@ Voice Agent (TTS)로 전달
 
 ## 완료 기준
 - [ ] Claude API 연동 및 답변 수신
-- [ ] 자비스 시스템 프롬프트 적용 (말투 확인)
+- [ ] 루미 시스템 프롬프트 적용 (말투 확인)
 - [ ] 의도 파악 정확도 80% 이상
 - [ ] 날씨/뉴스 웹 검색 동작
 - [ ] 전체 라우팅 흐름 정상 동작

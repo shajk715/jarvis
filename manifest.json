@@ -1,7 +1,7 @@
 {
-  "name": "JARVIS - 음성 AI 어시스턴트",
-  "short_name": "JARVIS",
-  "description": "네, 주인님. 자비스가 도와드리겠습니다.",
+  "name": "LUMI - 음성 AI 어시스턴트",
+  "short_name": "LUMI",
+  "description": "네, 주인님. 루미가 도와드리겠습니다.",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",

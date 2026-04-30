@@ -1,6 +1,6 @@
-# 🤖 JARVIS — 개인 음성 AI 어시스턴트
+# 🤖 LUMI — 개인 음성 AI 어시스턴트
 
-> 모바일 웹 기반 개인 전용 음성 AI. "자비스"라고 부르면 깨어나서 뭐든 음성으로 답해주는 어시스턴트.
+> 모바일 웹 기반 개인 전용 음성 AI. "루미"라고 부르면 깨어나서 뭐든 음성으로 답해주는 어시스턴트.
 
 ---
 
@@ -9,9 +9,9 @@
 | 항목 | 결정 |
 |------|------|
 | 플랫폼 | 모바일 웹 (Claude Code로 개발) |
-| 호출 방식 | Wake word "자비스" 감지 (Web Speech API) |
+| 호출 방식 | Wake word "루미" 감지 (Web Speech API) |
 | 입출력 | 완전 음성 (텍스트 UI 최소화) |
-| 말투 | "네, 주인님" 영화 자비스 스타일 |
+| 말투 | "네, 주인님" 영화 루미 스타일 |
 | 목소리 | 한국어 자연스러운 TTS |
 | UI | 파동/애니메이션 있는 멋진 화면 |
 | 보안 | 오픈 (개인 전용) |
@@ -24,7 +24,7 @@
 ## ✅ 기능 목록
 
 ### 핵심 기능
-- 🎙️ **Wake word 감지** — "자비스" 말하면 자동 활성화
+- 🎙️ **Wake word 감지** — "루미" 말하면 자동 활성화
 - 🗣️ **음성 인식 (STT)** — 말 → 텍스트 변환
 - 🔊 **음성 출력 (TTS)** — 텍스트 → 한국어 음성
 - 🧠 **AI 대화** — Claude 기반 자유 대화
@@ -74,7 +74,7 @@
 > ⚠️ API 키는 절대 코드에 직접 넣지 말고 `.env` 파일에 저장할 것
 
 ### 제거된 API (Claude로 대체)
-- ~~Picovoice~~ → Web Speech API (무료, 키 없음) — "자비스" wake word 감지
+- ~~Picovoice~~ → Web Speech API (무료, 키 없음) — "루미" wake word 감지
 - ~~OpenWeather API~~ → Claude 웹 검색으로 대체
 - ~~News API~~ → Claude 웹 검색으로 대체
 - ~~Google Translate API~~ → Claude가 직접 번역
@@ -84,16 +84,16 @@
 ## 📁 프로젝트 파일 구조
 
 ```
-jarvis/
+lumi/
 ├── .env                        # API 키 환경변수
 ├── index.html                  # 메인 화면
 ├── style.css                   # UI 스타일 (파동 애니메이션)
 │
 ├── core/
-│   ├── wakeWord.js             # "자비스" 감지 (Picovoice)
+│   ├── wakeWord.js             # "루미" 감지 (Picovoice)
 │   ├── stt.js                  # 음성 → 텍스트 (Web Speech API)
 │   ├── tts.js                  # 텍스트 → 음성 (Web Speech API)
-│   └── claude.js               # Claude API + 자비스 말투 프롬프트
+│   └── claude.js               # Claude API + 루미 말투 프롬프트
 │
 ├── features/
 │   ├── schedule.js             # 일정 관리
@@ -141,7 +141,7 @@ Claude Code 멀티 에이전트로 개발 역할 분담:
 - **담당 파일**: `features/weather.js`, `features/news.js`, `features/translate.js`, `features/youtube.js`, `features/maps.js`
 
 ### 5. 🎙️ Voice Agent
-- Web Speech API로 "자비스" wake word 감지
+- Web Speech API로 "루미" wake word 감지
 - STT / TTS 구현
 - 마이크 권한 처리
 - **담당 파일**: `core/wakeWord.js`, `core/stt.js`, `core/tts.js`
@@ -149,7 +149,7 @@ Claude Code 멀티 에이전트로 개발 역할 분담:
 ### 6. 🧠 AI Agent
 - Claude API 연동
 - Intent parser 구현
-- 자비스 말투 시스템 프롬프트 작성
+- 루미 말투 시스템 프롬프트 작성
 - **담당 파일**: `core/claude.js`, `utils/intentParser.js`
 
 ### 7. 🧪 QA Agent
@@ -183,10 +183,10 @@ AI 에이전트가 할 수 없어서 직접 해야 하는 작업들:
   → STT / TTS 먼저 동작 확인
 
 3단계: Wake word (Voice Agent)
-  → "자비스" 감지 연동
+  → "루미" 감지 연동
 
 4단계: AI 연결 (AI Agent)
-  → Claude API + 자비스 말투 프롬프트
+  → Claude API + 루미 말투 프롬프트
 
 5단계: UI (Frontend Agent)
   → 파동 애니메이션 화면
@@ -203,10 +203,10 @@ AI 에이전트가 할 수 없어서 직접 해야 하는 작업들:
 
 ---
 
-## 💬 자비스 시스템 프롬프트 (초안)
+## 💬 루미 시스템 프롬프트 (초안)
 
 ```
-당신은 "자비스"입니다. 아이언맨의 자비스처럼 주인님을 돕는 개인 AI 어시스턴트입니다.
+당신은 "루미"입니다. 아이언맨의 루미처럼 주인님을 돕는 개인 AI 어시스턴트입니다.
 
 규칙:
 - 항상 "네, 주인님" 또는 "물론입니다, 주인님" 으로 시작하세요

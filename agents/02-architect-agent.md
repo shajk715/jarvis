@@ -17,7 +17,7 @@
 ## 생성할 폴더 구조
 
 ```
-jarvis/
+lumi/
 ├── .env                        # API 키 환경변수 (템플릿만, 값은 주인님이 입력)
 ├── .gitignore                  # .env 제외 설정 필수
 ├── package.json
