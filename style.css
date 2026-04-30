@@ -752,6 +752,7 @@ html, body {
   border: 1.5px solid rgba(0, 180, 216, 0.5);
   border-radius: 24px;
   color: var(--text-primary);
+  text-decoration: none;
   font-family: var(--font-main);
   font-size: 15px;
   font-weight: 500;

@@ -34,6 +34,30 @@ const isIosStandalonePwa = (
 
 // 앱 상태
 let isListening = false;
+let ttsPrimed = false;
+
+/**
+ * iOS Safari/PWA는 SpeechSynthesis가 사용자 제스처 없이 호출되면 무음 처리됨.
+ * 첫 사용자 탭 시점에 무음 utterance를 한 번 흘려 엔진을 깨워둔다.
+ * 한 번 깨워두면 이후 wake word 콜백에서 호출돼도 정상 동작.
+ */
+function primeTts() {
+  if (ttsPrimed || typeof speechSynthesis === 'undefined') return;
+  try {
+    speechSynthesis.cancel();
+    speechSynthesis.resume();
+    const u = new SpeechSynthesisUtterance('.');
+    u.volume = 0;
+    u.rate = 10;
+    speechSynthesis.speak(u);
+    ttsPrimed = true;
+    console.log('[TTS] primed');
+  } catch (e) {
+    console.warn('[TTS] prime 실패:', e);
+  }
+}
+document.addEventListener('click', primeTts, true);
+document.addEventListener('touchstart', primeTts, true);
 
 /**
  * 앱 초기화
@@ -121,12 +145,13 @@ function startApp() {
   // 마이크 버튼 이벤트
   micBtn.addEventListener('click', toggleMic);
 
-  // 외부 페이지 열기 버튼 — 사용자 탭 → 같은 click 컨텍스트에서 열기
+  // 외부 페이지 열기 — 진짜 <a target="_blank"> 이므로 anchor 자체가 열기를 처리.
+  // 핸들러는 탭 후 버튼만 정리.
   externalOpenBtn.addEventListener('click', () => {
-    const url = externalOpenBtn.dataset.url;
-    if (url) openExternal(url);
-    externalOpenBtn.hidden = true;
-    delete externalOpenBtn.dataset.url;
+    setTimeout(() => {
+      externalOpenBtn.hidden = true;
+      externalOpenBtn.removeAttribute('href');
+    }, 100);
   });
 
   // STT 초기화 (interim 결과로 실시간 자막 표시)
@@ -191,7 +216,7 @@ async function handleVoiceResult(text) {
 
   // 이전 명령에서 떠있을 수 있는 외부 열기 버튼 숨김
   externalOpenBtn.hidden = true;
-  delete externalOpenBtn.dataset.url;
+  externalOpenBtn.removeAttribute('href');
 
   transcript.textContent = text;
   const guide = document.getElementById('guide-message');
@@ -252,14 +277,14 @@ async function handleVoiceResult(text) {
     }
 
     // 외부 페이지 열기가 큐에 있으면 처리
-    // - iOS PWA(standalone)는 자동 열기 차단되므로 탭 버튼 노출
-    // - 그 외(Android/desktop)는 자동 열기 시도 + 버튼도 같이 띄워서 폴백
+    // - iOS PWA(standalone): 사용자가 anchor를 직접 탭해야 Safari로 빠짐
+    // - 그 외(Android/desktop): 자동 click 트리거. 사용자가 화면에 머물면 버튼으로도 다시 열 수 있음
     const externalUrl = consumePendingExternal();
     if (externalUrl) {
-      externalOpenBtn.dataset.url = externalUrl;
+      externalOpenBtn.href = externalUrl;
       externalOpenBtn.hidden = false;
       if (!isIosStandalonePwa) {
-        openExternal(externalUrl);
+        externalOpenBtn.click();
       }
     }
   } catch (err) {

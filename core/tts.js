@@ -33,6 +33,8 @@ export function speak(text) {
 
     // 기존 발화 중단
     speechSynthesis.cancel();
+    // iOS Safari는 synthesis 엔진이 paused 상태로 멈추는 경우가 있어 매번 깨움
+    try { speechSynthesis.resume(); } catch (e) { /* ignore */ }
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = CONFIG.TTS_LANG;

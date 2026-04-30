@@ -1,5 +1,5 @@
 // JARVIS Service Worker - 오프라인 캐싱
-const CACHE_VERSION = 'jarvis-v9';
+const CACHE_VERSION = 'jarvis-v10';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
