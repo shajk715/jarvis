@@ -10,7 +10,7 @@ import { handleSchedule } from './features/schedule.js';
 import { handleMemo } from './features/memo.js';
 import { handleTimer } from './features/timer.js';
 import { handleBriefing } from './features/briefing.js';
-import { handleYoutube, consumePendingVideoId, openYoutubeApp } from './features/youtube.js';
+import { handleYoutube, consumePendingVideoId, playInPlayer, initYoutubePlayer } from './features/youtube.js';
 // import { handleMaps } from './features/maps.js'; // 보류
 
 // DOM 요소
@@ -125,6 +125,9 @@ function startApp() {
   initWakeWord({ onDetected: onWakeWordDetected });
   startWakeWordDetection();
 
+  // 인앱 유튜브 플레이어 초기화 (IFrame API 비동기 로드)
+  initYoutubePlayer();
+
   setStatus('대기 중');
 }
 
@@ -217,11 +220,10 @@ async function handleVoiceResult(text) {
     orb.className = 'speaking';
     await speak(result);
 
-    // 유튜브 검색 결과가 있으면 TTS 직후 YouTube 앱(또는 웹)으로 이동
+    // 유튜브 검색 결과가 있으면 TTS 직후 인앱 플레이어로 재생
     const videoId = consumePendingVideoId();
     if (videoId) {
-      openYoutubeApp(videoId);
-      return;
+      playInPlayer(videoId);
     }
   } catch (err) {
     handleError(err);

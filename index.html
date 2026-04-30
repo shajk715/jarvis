@@ -46,6 +46,14 @@
 
     <!-- 메인 비주얼 (음성 파형/아이콘 영역) -->
     <main id="main-area">
+      <!-- 인앱 유튜브 플레이어 (재생 중에만 표시) -->
+      <div id="player-container" hidden>
+        <div id="player-header">
+          <span>재생 중</span>
+          <button id="player-close" type="button" aria-label="닫기">✕</button>
+        </div>
+        <div id="youtube-player"></div>
+      </div>
       <div id="orb-container">
         <div id="orb" class="idle">
           <div class="orb-core"></div>

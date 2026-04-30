@@ -1,20 +1,109 @@
-// 유튜브 음악 검색 모듈 - Vercel 서버사이드 프록시 경유
-// 검색만 서버에서 하고, 재생은 OS별 딥링크로 YouTube 앱/웹을 직접 호출
+// 유튜브 음악 검색 + 인앱 IFrame 플레이어 모듈
+// 검색은 Vercel 서버사이드, 재생은 YouTube IFrame Player API로 LUMI 화면 안에서
 
-let pendingVideoId = null;
+let pendingVideoId = null;   // 검색 결과 → TTS 종료 후 app.js가 consume
+let player = null;
+let playerReady = false;
+let queuedVideoId = null;    // 플레이어 준비 전에 들어온 재생 요청
+let containerEl = null;
 
 /**
- * 유튜브 관련 명령 처리
- * @param {Object} intent - 파싱된 의도 객체
- * @param {string} rawText - 원본 음성 텍스트
- * @returns {Promise<string>} 응답 텍스트
+ * YouTube IFrame Player 초기화
+ * - <div id="youtube-player"></div>를 iframe으로 교체
+ * - <div id="player-container">를 표시/숨김
+ * 앱 시작 시 한 번 호출
+ */
+export function initYoutubePlayer() {
+  containerEl = document.getElementById('player-container');
+  const closeBtn = document.getElementById('player-close');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', stopPlayer);
+  }
+
+  // YouTube IFrame API 스크립트 로드 (한 번만)
+  if (!window.YT && !document.getElementById('yt-iframe-api-script')) {
+    const tag = document.createElement('script');
+    tag.id = 'yt-iframe-api-script';
+    tag.src = 'https://www.youtube.com/iframe_api';
+    document.head.appendChild(tag);
+  }
+
+  // API 준비 콜백 (글로벌)
+  window.onYouTubeIframeAPIReady = () => {
+    player = new YT.Player('youtube-player', {
+      width: '100%',
+      height: '100%',
+      playerVars: {
+        playsinline: 1,
+        rel: 0,
+        modestbranding: 1,
+      },
+      events: {
+        onReady: () => {
+          playerReady = true;
+          if (queuedVideoId) {
+            showPlayer();
+            player.loadVideoById(queuedVideoId);
+            queuedVideoId = null;
+          }
+        },
+        onError: (e) => {
+          console.warn('[YouTube] 플레이어 에러:', e.data);
+        },
+      },
+    });
+  };
+}
+
+function showPlayer() {
+  if (containerEl) containerEl.hidden = false;
+}
+
+function hidePlayer() {
+  if (containerEl) containerEl.hidden = true;
+}
+
+/**
+ * LUMI 화면 안에서 영상 재생 (TTS 종료 후 호출)
+ */
+export function playInPlayer(videoId) {
+  if (!playerReady || !player) {
+    queuedVideoId = videoId;
+    return;
+  }
+  showPlayer();
+  player.loadVideoById(videoId);
+}
+
+/** 재생 정지 + 플레이어 닫기 */
+export function stopPlayer() {
+  if (player && playerReady) {
+    try { player.stopVideo(); } catch (e) { /* ignore */ }
+  }
+  hidePlayer();
+}
+
+/** 일시정지 */
+export function pausePlayerVideo() {
+  if (player && playerReady) {
+    try { player.pauseVideo(); } catch (e) { /* ignore */ }
+  }
+}
+
+/**
+ * 유튜브 관련 음성 명령 처리
  */
 export async function handleYoutube(intent, rawText) {
   const subAction = intent.subAction;
 
-  if (subAction === 'stop' || subAction === 'pause') {
-    // 외부 유튜브 페이지/앱은 우리가 제어할 수 없음
-    return '유튜브 앱에서 직접 멈춰주세요, 주인님.';
+  if (subAction === 'stop') {
+    stopPlayer();
+    return '음악을 정지했습니다, 주인님.';
+  }
+
+  if (subAction === 'pause') {
+    pausePlayerVideo();
+    return '일시정지했습니다, 주인님.';
   }
 
   const query =
@@ -40,7 +129,7 @@ export async function handleYoutube(intent, rawText) {
 }
 
 /**
- * 유튜브 검색
+ * 유튜브 검색 (Vercel 프록시)
  */
 export async function searchYoutube(query, maxResults = 5) {
   const params = new URLSearchParams({
@@ -69,47 +158,4 @@ export function consumePendingVideoId() {
   const id = pendingVideoId;
   pendingVideoId = null;
   return id;
-}
-
-/**
- * 디바이스에 맞춰 YouTube 앱(설치 시) 또는 웹페이지를 연다.
- * PWA 표준 동작: anchor 클릭이 location.href 보다 더 안정적으로 외부 핸들러를 트리거
- * - Android: intent URL → YouTube 앱 강제 호출, 미설치 시 브라우저 폴백
- * - iOS: youtube:// 스킴 → 앱 호출, 미설치 시 1.2초 후 웹으로 폴백
- * - Desktop/기타: 새 탭에서 웹페이지
- */
-export function openYoutubeApp(videoId) {
-  const ua = navigator.userAgent || '';
-  const webUrl = `https://www.youtube.com/watch?v=${videoId}`;
-
-  const triggerLink = (href, target) => {
-    const a = document.createElement('a');
-    a.href = href;
-    if (target) a.target = target;
-    a.rel = 'noopener noreferrer';
-    a.style.display = 'none';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-  };
-
-  if (/Android/i.test(ua)) {
-    const fallback = encodeURIComponent(webUrl);
-    const intentUrl = `intent://www.youtube.com/watch?v=${videoId}#Intent;package=com.google.android.youtube;scheme=https;S.browser_fallback_url=${fallback};end`;
-    triggerLink(intentUrl);
-    return;
-  }
-
-  if (/iPhone|iPad|iPod/i.test(ua)) {
-    triggerLink(`youtube://www.youtube.com/watch?v=${videoId}`);
-    setTimeout(() => {
-      if (!document.hidden) {
-        triggerLink(webUrl, '_blank');
-      }
-    }, 1200);
-    return;
-  }
-
-  // 데스크톱/기타
-  triggerLink(webUrl, '_blank');
 }

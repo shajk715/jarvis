@@ -683,3 +683,57 @@ html, body {
   color: var(--danger);
   min-height: 18px;
 }
+
+/* =====================
+   인앱 유튜브 플레이어
+   ===================== */
+#player-container {
+  width: 100%;
+  max-width: 360px;
+  background: rgba(12, 12, 26, 0.92);
+  border: 1px solid rgba(0, 180, 216, 0.25);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 0 24px rgba(0, 180, 216, 0.18);
+  flex-shrink: 0;
+}
+
+#player-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 14px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+#player-close {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: color 0.2s ease;
+}
+
+#player-close:hover,
+#player-close:active {
+  color: var(--text-primary);
+}
+
+#youtube-player {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+}
+
+#youtube-player iframe {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border: 0;
+}
