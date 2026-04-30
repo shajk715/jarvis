@@ -1,17 +1,20 @@
 // 유튜브 음악 검색 + 인앱 IFrame 플레이어 모듈
 // 검색은 Vercel 서버사이드, 재생은 YouTube IFrame Player API로 LUMI 화면 안에서
+//
+// 중요: YT iframe은 로드되는 순간 iOS PWA의 오디오 세션을 잡아채서
+// SpeechSynthesis(TTS)를 무음으로 만드는 사례가 있음.
+// → 첫 재생 요청이 들어올 때까지 스크립트/플레이어 생성을 지연시킴.
 
-let pendingVideoId = null;   // 검색 결과 → TTS 종료 후 app.js가 consume
+let pendingVideoId = null;       // 검색 결과 → TTS 종료 후 app.js가 consume
 let player = null;
 let playerReady = false;
-let queuedVideoId = null;    // 플레이어 준비 전에 들어온 재생 요청
+let scriptRequested = false;     // YT iframe API 스크립트 로드 시작 여부
 let containerEl = null;
+const readyCallbacks = [];       // 플레이어 준비 후 실행할 작업들
 
 /**
- * YouTube IFrame Player 초기화
- * - <div id="youtube-player"></div>를 iframe으로 교체
- * - <div id="player-container">를 표시/숨김
- * 앱 시작 시 한 번 호출
+ * 컨테이너/닫기버튼 핸들러만 세팅. YT 스크립트는 첫 재생 때 로드.
+ * 앱 시작 시 한 번 호출.
  */
 export function initYoutubePlayer() {
   containerEl = document.getElementById('player-container');
@@ -19,16 +22,16 @@ export function initYoutubePlayer() {
   if (closeBtn) {
     closeBtn.addEventListener('click', stopPlayer);
   }
+}
 
-  // YouTube IFrame API 스크립트 로드 (한 번만)
-  if (!window.YT && !document.getElementById('yt-iframe-api-script')) {
-    const tag = document.createElement('script');
-    tag.id = 'yt-iframe-api-script';
-    tag.src = 'https://www.youtube.com/iframe_api';
-    document.head.appendChild(tag);
-  }
+/**
+ * YT IFrame API 스크립트를 로드하고 플레이어 인스턴스를 생성.
+ * 첫 재생 요청 시점에 1회만 실행됨.
+ */
+function ensurePlayer() {
+  if (scriptRequested) return;
+  scriptRequested = true;
 
-  // API 준비 콜백 (글로벌)
   window.onYouTubeIframeAPIReady = () => {
     player = new YT.Player('youtube-player', {
       width: '100%',
@@ -41,10 +44,9 @@ export function initYoutubePlayer() {
       events: {
         onReady: () => {
           playerReady = true;
-          if (queuedVideoId) {
-            showPlayer();
-            player.loadVideoById(queuedVideoId);
-            queuedVideoId = null;
+          while (readyCallbacks.length) {
+            const cb = readyCallbacks.shift();
+            try { cb(); } catch (e) { console.warn('[YouTube] ready cb error', e); }
           }
         },
         onError: (e) => {
@@ -53,6 +55,11 @@ export function initYoutubePlayer() {
       },
     });
   };
+
+  const tag = document.createElement('script');
+  tag.id = 'yt-iframe-api-script';
+  tag.src = 'https://www.youtube.com/iframe_api';
+  document.head.appendChild(tag);
 }
 
 function showPlayer() {
@@ -67,12 +74,17 @@ function hidePlayer() {
  * LUMI 화면 안에서 영상 재생 (TTS 종료 후 호출)
  */
 export function playInPlayer(videoId) {
-  if (!playerReady || !player) {
-    queuedVideoId = videoId;
+  const doPlay = () => {
+    showPlayer();
+    player.loadVideoById(videoId);
+  };
+
+  if (playerReady && player) {
+    doPlay();
     return;
   }
-  showPlayer();
-  player.loadVideoById(videoId);
+  readyCallbacks.push(doPlay);
+  ensurePlayer();
 }
 
 /** 재생 정지 + 플레이어 닫기 */
