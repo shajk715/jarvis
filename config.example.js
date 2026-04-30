@@ -4,9 +4,6 @@ const CONFIG = {
   SUPABASE_URL: 'https://your-project.supabase.co',
   SUPABASE_ANON_KEY: 'your-anon-key',
 
-  // Gemini (API 키는 Vercel 서버사이드에서 관리)
-  GEMINI_MODEL: 'gemini-2.0-flash',
-
   // TTS 설정
   TTS_LANG: 'ko-KR',
   TTS_RATE: 1.0,

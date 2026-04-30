@@ -4,8 +4,6 @@ export default function handler(req, res) {
 
   res.status(200).json({
     status: 'ok',
-    hasGeminiKey: !!process.env.GEMINI_API_KEY,
-    geminiKeyLength: process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.length : 0,
     hasYoutubeKey: !!process.env.YOUTUBE_API_KEY,
     youtubeKeyLength: process.env.YOUTUBE_API_KEY ? process.env.YOUTUBE_API_KEY.length : 0,
     nodeVersion: process.version,

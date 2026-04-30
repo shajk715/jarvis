@@ -4,13 +4,16 @@ import { getCurrentUser, signIn, signUp, onAuthStateChange } from './auth.js';
 import { initWakeWord, startWakeWordDetection, stopWakeWordDetection } from './core/wakeWord.js';
 import { initSTT, startListening, stopListening } from './core/stt.js';
 import { speak } from './core/tts.js';
-import { sendMessage, askWithSearch } from './core/gemini.js';
 import { parseIntent } from './utils/intentParser.js';
+import { openExternal, consumePendingExternal } from './utils/openExternal.js';
 import { handleSchedule } from './features/schedule.js';
 import { handleMemo } from './features/memo.js';
 import { handleTimer } from './features/timer.js';
 import { handleBriefing } from './features/briefing.js';
 import { handleYoutube, consumePendingVideoId, playInPlayer, initYoutubePlayer } from './features/youtube.js';
+import { handleWeather } from './features/weather.js';
+import { handleNews } from './features/news.js';
+import { handleTranslate } from './features/translate.js';
 // import { handleMaps } from './features/maps.js'; // 보류
 
 // DOM 요소
@@ -202,15 +205,17 @@ async function handleVoiceResult(text) {
       //   result = await handleMaps(intent, text);
       //   break;
       case 'weather':
+        result = handleWeather(intent, text);
+        break;
       case 'news':
-        result = await askWithSearch(text);
+        result = handleNews(intent, text);
         break;
       case 'translate':
-        result = await sendMessage(text);
+        result = handleTranslate(intent, text);
         break;
       default:
-        // 일반 대화 - Gemini에게 전달
-        result = await sendMessage(text);
+        // AI 자유 대화 제거 — 매칭되지 않은 명령은 안내 후 종료
+        result = '잘 이해하지 못했습니다, 주인님. 다시 말씀해 주세요.';
         break;
     }
 
@@ -224,6 +229,12 @@ async function handleVoiceResult(text) {
     const videoId = consumePendingVideoId();
     if (videoId) {
       playInPlayer(videoId);
+    }
+
+    // 외부 페이지 열기가 큐에 있으면 TTS 직후 새 탭/시스템 브라우저로 이동
+    const externalUrl = consumePendingExternal();
+    if (externalUrl) {
+      openExternal(externalUrl);
     }
   } catch (err) {
     handleError(err);

@@ -1,5 +1,5 @@
 // JARVIS Service Worker - 오프라인 캐싱
-const CACHE_VERSION = 'jarvis-v7';
+const CACHE_VERSION = 'jarvis-v8';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -11,14 +11,17 @@ const STATIC_ASSETS = [
   '/core/wakeWord.js',
   '/core/stt.js',
   '/core/tts.js',
-  '/core/gemini.js',
   '/features/schedule.js',
   '/features/memo.js',
   '/features/timer.js',
   '/features/briefing.js',
   '/features/youtube.js',
+  '/features/weather.js',
+  '/features/news.js',
+  '/features/translate.js',
   '/utils/intentParser.js',
   '/utils/storage.js',
+  '/utils/openExternal.js',
   '/lib/supabase.js',
   '/icons/icon.svg',
   '/icons/icon-192.png',
